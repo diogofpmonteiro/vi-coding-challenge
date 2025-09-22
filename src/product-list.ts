@@ -62,7 +62,21 @@ export class ProductList extends LitElement {
     }
   }
 
-  private handleTypeFilter(event: Event) {
+  private applyProductFilters() {
+    if (this.selectedTypes.length === 0) {
+      this.filteredProducts = this.products;
+    } else {
+      this.filteredProducts = this.products.filter((product) =>
+        // check if product satisfies all selected types
+        this.selectedTypes.every((selected) =>
+          // check if this product has at least one type that matches it
+          product.types.some((type) => type.type.name === selected)
+        )
+      );
+    }
+  }
+
+  private handleTypeFilterClick(event: Event) {
     const checkbox = event.target as HTMLInputElement;
     const typeName = checkbox.value;
 
@@ -75,13 +89,13 @@ export class ProductList extends LitElement {
     } else {
       this.selectedTypes = this.selectedTypes.filter((type) => type !== typeName);
     }
+    this.applyProductFilters();
   }
 
   private async loadProducts() {
     try {
       const response = await fetch(`${POKEMON_API_BASE_URL}/pokemon?limit=${this.limit}&offset=${this.offset}`);
       const data: ProductListResponse = await response.json();
-      console.log("data", data);
 
       const productDetails = await Promise.all(
         data.results.map(async (product) => {
@@ -90,9 +104,8 @@ export class ProductList extends LitElement {
         })
       );
 
-      console.log("details", productDetails);
-
       this.products = [...this.products, ...productDetails];
+      this.applyProductFilters();
     } catch (error) {
       console.error("Failed to load products", error);
     }
@@ -122,7 +135,7 @@ export class ProductList extends LitElement {
               ${this.availableTypes.map(
                 (type) => html`
                   <label>
-                    <input type="checkbox" value="${type}" @change=${this.handleTypeFilter} />
+                    <input type="checkbox" value="${type}" @change=${this.handleTypeFilterClick} />
                     ${type.charAt(0).toUpperCase() + type.slice(1)}
                   </label>
                 `
@@ -130,7 +143,7 @@ export class ProductList extends LitElement {
             </div>
           </div>
           <div class="product-grid">
-            ${this.products.map(
+            ${this.filteredProducts.map(
               (product) => html`
                 <div
                   class="product-card"
