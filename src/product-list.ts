@@ -41,6 +41,8 @@ export class ProductList extends LitElement {
   @state() private availableTypes: string[] = [];
   @state() private selectedTypes: string[] = [];
   @state() private offset = 0;
+  @state() private loading = false;
+  @state() private hasMore = true;
 
   private readonly limit = 20;
 
@@ -93,6 +95,10 @@ export class ProductList extends LitElement {
   }
 
   private async loadProducts() {
+    if (this.loading) return;
+
+    this.loading = true;
+
     try {
       const response = await fetch(`${POKEMON_API_BASE_URL}/pokemon?limit=${this.limit}&offset=${this.offset}`);
       const data: ProductListResponse = await response.json();
@@ -106,9 +112,12 @@ export class ProductList extends LitElement {
 
       this.products = [...this.products, ...productDetails];
       this.offset += this.limit;
+      this.hasMore = data.next !== null;
       this.applyProductFilters();
     } catch (error) {
       console.error("Failed to load products", error);
+    } finally {
+      this.loading = false;
     }
   }
 
@@ -171,10 +180,14 @@ export class ProductList extends LitElement {
                 </div>
               `
             )}
-
-            <div class="load-more-btn">
-              <button @click=${this.loadMore}>Load More</button>
-            </div>
+            ${this.loading ? html` <div class="loading">Loading...</div> ` : ""}
+            ${!this.loading && this.hasMore && this.products.length > 0
+              ? html`
+                  <div class="load-more">
+                    <button @click=${this.loadMore}>Load More</button>
+                  </div>
+                `
+              : ""}
           </div>
         </div>
       </div>
@@ -362,6 +375,37 @@ export class ProductList extends LitElement {
     }
     .type-stellar {
       background-color: #42c0a5;
+    }
+
+    .load-more {
+      grid-column: 1 / -1;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .load-more button {
+      padding: 12px 24px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .load-more button:hover {
+      background: #1565c0;
+    }
+
+    .load-more button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.1rem;
     }
   `;
 }
