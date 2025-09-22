@@ -111,9 +111,9 @@ export class ProductList extends LitElement {
     }
   }
 
-  private handleProductClick(product: Product) {
-    // For now, just log the click since detail pages will be implemented later
-    console.log("product clicked:", product);
+  private handleProductClick(productId: number) {
+    // for now just log the click since detail pages will be implemented later
+    console.log("product clicked:", productId); // redirect user using product id
   }
 
   render() {
@@ -144,21 +144,23 @@ export class ProductList extends LitElement {
           </div>
           <div class="product-grid">
             ${this.filteredProducts.map(
-              (product) => html`
+              ({ id, sprites, name, types }) => html`
                 <div
                   class="product-card"
                   @click=${(e: Event) => {
                     e.preventDefault();
-                    this.handleProductClick(product);
+                    this.handleProductClick(id);
                   }}
                 >
-                  <div class="product-id">#${product.id}</div>
+                  <div class="product-id">#${id}</div>
                   <div class="product-image">
-                    <img src="${product.sprites.front_default || ""}" alt="${product.name}" loading="lazy" />
+                    <img src="${sprites.front_default || ""}" alt="${name}" loading="lazy" />
                   </div>
-                  <div class="product-name">${product.name}</div>
-                  <div class="product-types">
-                    ${product.types.map((type) => html` <span> ${type.type.name} </span> `)}
+                  <div class="product-details">
+                    <div class="product-name">${name}</div>
+                    <div class="product-types">
+                      ${types.map(({ type }) => html` <div class="type-badge type-${type.name}"></div> `)}
+                    </div>
                   </div>
                 </div>
               `
@@ -230,7 +232,6 @@ export class ProductList extends LitElement {
     .product-card {
       background: white;
       border: 1px solid black;
-      padding: 15px;
       text-align: center;
       cursor: pointer;
     }
@@ -241,7 +242,7 @@ export class ProductList extends LitElement {
       justify-content: center;
       width: 80px;
       height: 80px;
-      margin: auto;
+      margin: 0 auto 8px;
     }
 
     .product-image img {
@@ -250,13 +251,85 @@ export class ProductList extends LitElement {
     }
 
     .product-name {
-      font-weight: bold;
-      margin-bottom: 8px;
       text-transform: capitalize;
     }
 
     .product-id {
       text-align: right;
+      margin: 8px 8px;
+    }
+
+    .product-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid black;
+      padding: 8px 16px;
+    }
+
+    .product-types {
+      display: flex;
+      gap: 4px;
+    }
+
+    .type-badge {
+      padding: 8px;
+      border-radius: 50%;
+    }
+
+    .type-normal {
+      background-color: #a8a878;
+    }
+    .type-fire {
+      background-color: #f08030;
+    }
+    .type-water {
+      background-color: #6890f0;
+    }
+    .type-electric {
+      background-color: #f8d030;
+    }
+    .type-grass {
+      background-color: #78c850;
+    }
+    .type-ice {
+      background-color: #98d8d8;
+    }
+    .type-fighting {
+      background-color: #c03028;
+    }
+    .type-poison {
+      background-color: #a040a0;
+    }
+    .type-ground {
+      background-color: #e0c068;
+    }
+    .type-flying {
+      background-color: #a890f0;
+    }
+    .type-psychic {
+      background-color: #f85888;
+    }
+    .type-bug {
+      background-color: #a8b820;
+    }
+    .type-rock {
+      background-color: #b8a038;
+    }
+    .type-ghost {
+      background-color: #705898;
+    }
+    .type-dragon {
+      background-color: #7038f8;
+    }
+    .type-dark {
+      background-color: #705848;
+    }
+    .type-steel {
+      background-color: #b8b8d0;
+    }
+    .type-fairy {
+      background-color: #ee99ac;
     }
   `;
 }
