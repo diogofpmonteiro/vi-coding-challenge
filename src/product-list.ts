@@ -46,8 +46,8 @@ export class ProductList extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    await this.fetchTypes();
     await this.loadProducts();
+    await this.fetchTypes();
   }
 
   async fetchTypes() {
@@ -105,6 +105,7 @@ export class ProductList extends LitElement {
       );
 
       this.products = [...this.products, ...productDetails];
+      this.offset += this.limit;
       this.applyProductFilters();
     } catch (error) {
       console.error("Failed to load products", error);
@@ -114,6 +115,10 @@ export class ProductList extends LitElement {
   private handleProductClick(productId: number) {
     // for now just log the click since detail pages will be implemented later
     console.log("product clicked:", productId); // redirect user using product id
+  }
+
+  private async loadMore() {
+    await this.loadProducts();
   }
 
   render() {
@@ -134,9 +139,10 @@ export class ProductList extends LitElement {
               <p>Type</p>
               ${this.availableTypes.map(
                 (type) => html`
-                  <label>
+                  <label class="filter-label">
                     <input type="checkbox" value="${type}" @change=${this.handleTypeFilterClick} />
                     ${type.charAt(0).toUpperCase() + type.slice(1)}
+                    <span class="type-badge type-${type} type-badge--small"></span>
                   </label>
                 `
               )}
@@ -165,6 +171,10 @@ export class ProductList extends LitElement {
                 </div>
               `
             )}
+
+            <div class="load-more-btn">
+              <button @click=${this.loadMore}>Load More</button>
+            </div>
           </div>
         </div>
       </div>
@@ -199,6 +209,8 @@ export class ProductList extends LitElement {
     }
 
     .filter-section {
+      position: sticky;
+      top: 20px;
       padding: 20px;
       border-radius: 0px;
       border: 1px solid black;
@@ -210,6 +222,14 @@ export class ProductList extends LitElement {
       margin-bottom: 15px;
       font-size: 1.2rem;
       font-weight: 400;
+    }
+
+    .filter-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      cursor: pointer;
     }
 
     .filter-group {
@@ -277,6 +297,15 @@ export class ProductList extends LitElement {
       border-radius: 50%;
     }
 
+    .type-badge--small {
+      width: 14px;
+      height: 14px;
+      padding: 0;
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: 4px;
+    }
+
     .type-normal {
       background-color: #a8a878;
     }
@@ -330,6 +359,9 @@ export class ProductList extends LitElement {
     }
     .type-fairy {
       background-color: #ee99ac;
+    }
+    .type-stellar {
+      background-color: #42c0a5;
     }
   `;
 }
