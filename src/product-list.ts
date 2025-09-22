@@ -81,9 +81,10 @@ export class ProductList extends LitElement {
   private handleTypeFilterClick(event: Event) {
     const checkbox = event.target as HTMLInputElement;
     const typeName = checkbox.value;
+    const typeLimit = 2;
 
     if (checkbox.checked) {
-      if (this.selectedTypes.length >= 2) {
+      if (this.selectedTypes.length >= typeLimit) {
         checkbox.checked = false;
         return;
       }
