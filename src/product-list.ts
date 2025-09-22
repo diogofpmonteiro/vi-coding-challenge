@@ -2,7 +2,7 @@ import { LitElement, css, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { POKEMON_API_BASE_URL } from "./constants";
 
-interface PokemonType {
+interface ProductType {
   name: string;
   url: string;
 }
@@ -15,14 +15,18 @@ export class ProductList extends LitElement {
   @state() private availableTypes: string[] = [];
   @state() private selectedTypes: string[] = [];
 
+  async connectedCallback() {
+    super.connectedCallback();
+    await this.fetchTypes();
+  }
+
   async fetchTypes() {
     try {
       const response = await fetch(POKEMON_API_BASE_URL + "type");
       const data = await response.json();
       this.availableTypes = data.results
-        .filter((type: PokemonType) => type.name !== "unknown")
-        .map((type: PokemonType) => type.name);
-      console.log(this.availableTypes);
+        .filter((type: ProductType) => type.name !== "unknown")
+        .map((type: ProductType) => type.name);
     } catch (error) {
       console.error("Failed to load types:", error);
     }
@@ -54,8 +58,6 @@ export class ProductList extends LitElement {
             `
           : ""}
 
-        <button @click=${this.fetchTypes}>fetch types</button>
-
         <div class="grid-container">
           <div class="filter-section">
             <h3>Filter</h3>
@@ -71,7 +73,7 @@ export class ProductList extends LitElement {
               )}
             </div>
           </div>
-          <div></div>
+          <div class="content-section"></div>
         </div>
       </div>
     `;
@@ -105,7 +107,6 @@ export class ProductList extends LitElement {
     }
 
     .filter-section {
-      background: #f5f5f5;
       padding: 20px;
       border-radius: 0px;
       border: 1px solid black;
