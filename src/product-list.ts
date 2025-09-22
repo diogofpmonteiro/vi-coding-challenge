@@ -2,9 +2,33 @@ import { LitElement, css, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { POKEMON_API_BASE_URL } from "./constants";
 
+interface Product {
+  id: number;
+  name: string;
+  sprites: {
+    front_default: string;
+  };
+  types: Array<{
+    type: {
+      name: string;
+    };
+  }>;
+}
 interface ProductType {
   name: string;
   url: string;
+}
+
+interface ProductListItem {
+  name: string;
+  url: string;
+}
+
+interface ProductListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: ProductListItem[];
 }
 
 @customElement("product-list")
@@ -12,12 +36,18 @@ export class ProductList extends LitElement {
   @property({ type: String })
   headline = "";
 
+  @state() private products: Product[] = [];
+  @state() private filteredProducts: Product[] = [];
   @state() private availableTypes: string[] = [];
   @state() private selectedTypes: string[] = [];
+  @state() private offset = 0;
+
+  private readonly limit = 20;
 
   async connectedCallback() {
     super.connectedCallback();
     await this.fetchTypes();
+    await this.loadProducts();
   }
 
   async fetchTypes() {
@@ -47,6 +77,32 @@ export class ProductList extends LitElement {
     }
   }
 
+  private async loadProducts() {
+    try {
+      const response = await fetch(`${POKEMON_API_BASE_URL}/pokemon?limit=${this.limit}&offset=${this.offset}`);
+      const data: ProductListResponse = await response.json();
+      console.log("data", data);
+
+      const productDetails = await Promise.all(
+        data.results.map(async (product) => {
+          const detailRes = await fetch(product.url);
+          return await detailRes.json();
+        })
+      );
+
+      console.log("details", productDetails);
+
+      this.products = [...this.products, ...productDetails];
+    } catch (error) {
+      console.error("Failed to load products", error);
+    }
+  }
+
+  private handleProductClick(product: Product) {
+    // For now, just log the click since detail pages will be implemented later
+    console.log("product clicked:", product);
+  }
+
   render() {
     return html`
       <div class="container">
@@ -73,7 +129,28 @@ export class ProductList extends LitElement {
               )}
             </div>
           </div>
-          <div class="content-section"></div>
+          <div class="product-grid">
+            ${this.products.map(
+              (product) => html`
+                <div
+                  class="product-card"
+                  @click=${(e: Event) => {
+                    e.preventDefault();
+                    this.handleProductClick(product);
+                  }}
+                >
+                  <div class="product-id">#${product.id}</div>
+                  <div class="product-image">
+                    <img src="${product.sprites.front_default || ""}" alt="${product.name}" loading="lazy" />
+                  </div>
+                  <div class="product-name">${product.name}</div>
+                  <div class="product-types">
+                    ${product.types.map((type) => html` <span> ${type.type.name} </span> `)}
+                  </div>
+                </div>
+              `
+            )}
+          </div>
         </div>
       </div>
     `;
@@ -129,6 +206,44 @@ export class ProductList extends LitElement {
       margin-bottom: 8px;
       cursor: pointer;
       font-size: 0.9rem;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .product-card {
+      background: white;
+      border: 1px solid black;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .product-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      height: 80px;
+      margin: auto;
+    }
+
+    .product-image img {
+      max-width: 80px;
+      max-height: 80px;
+    }
+
+    .product-name {
+      font-weight: bold;
+      margin-bottom: 8px;
+      text-transform: capitalize;
+    }
+
+    .product-id {
+      text-align: right;
     }
   `;
 }
